@@ -5,7 +5,7 @@ from config.settings import AUTH_USER_MODEL
 
 
 class User(AbstractUser):
-    pass
+    biography = models.CharField(max_length=500, blank=True)
 
     def __str__(self) -> str:
         return (
