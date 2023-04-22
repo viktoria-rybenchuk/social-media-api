@@ -2,9 +2,11 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from config.settings import AUTH_USER_MODEL
+from content.models import Image
 
 
 class User(AbstractUser):
+    profile_image = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True)
     biography = models.CharField(max_length=500, blank=True)
 
     def __str__(self) -> str:
