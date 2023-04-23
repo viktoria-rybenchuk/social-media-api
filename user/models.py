@@ -2,11 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from config.settings import AUTH_USER_MODEL
-from content.models import Image
 
 
 class User(AbstractUser):
-    profile_image = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True)
+    profile_image = models.ImageField(upload_to="profile_images", null=True, blank=True)
     biography = models.CharField(max_length=500, blank=True)
 
     def __str__(self) -> str:
@@ -35,3 +34,6 @@ class UserFollowing(models.Model):
             f"Followers: {self.followers.username}"
             f"Following: {self.followers.username}"
         )
+
+    class Meta:
+        unique_together = ("following", "followers")
