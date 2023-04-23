@@ -3,12 +3,8 @@ from django.db import models
 from config.settings import AUTH_USER_MODEL
 
 
-
-
-
 class Image(models.Model):
     image = models.ImageField(upload_to="post_images", null=True, blank=True)
-
 
 
 class Post(models.Model):
@@ -17,16 +13,20 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts")
-    image = models.ManyToManyField(Image, null=True, related_name="posts")
+    images = models.ManyToManyField(Image, null=True, related_name="posts", blank=True)
 
     def __str__(self) -> str:
         return self.title
+
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     author = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comments")
     content = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
 class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="likes")

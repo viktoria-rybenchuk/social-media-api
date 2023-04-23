@@ -16,9 +16,11 @@ class CreateImageSerializer(serializers.ModelSerializer):
 
 
 class CreateLikeSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(many=True, slug_field="username", read_only=True)
+
     class Meta:
         model = Like
-        fields = ("id", "user", "post")
+        fields = ("id", "user")
 
 
 class PostImageSerializer(serializers.ModelSerializer):
