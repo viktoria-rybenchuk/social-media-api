@@ -1,14 +1,21 @@
+from typing import Type
+
+from django.db.models import QuerySet
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 
 from content.models import Post, Comment
 from content.serializers import (
     PostSerializer,
     PostListSerializer,
-    CommentSerializer, CreateLikeSerializer, PostDetailSerializer
+    CommentSerializer,
+    CreateLikeSerializer,
+    PostDetailSerializer
 )
-from user.permissions import IsOwnerOrReadOnly, IsAuthorOrReadOnly
+from user.permissions import IsAuthorOrReadOnly
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -16,7 +23,7 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = (IsAuthorOrReadOnly,)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Type[Serializer]:
         if self.action == "retrieve":
             return PostDetailSerializer
         if self.action == "list":
@@ -25,16 +32,23 @@ class PostViewSet(viewsets.ModelViewSet):
             return CreateLikeSerializer
         return self.serializer_class
 
-    # def get_queryset(self):
-    #     following = self.request.user.following.prefetch_related(
-    #         "following__id").values_list("id")
-    #     return self.queryset.filter(author_id__in=following)
+    def get_queryset(self) -> QuerySet:
+        following = self.request.user.following.prefetch_related(
+            "following__id").values_list("id")
+        return self.queryset.filter(author_id__in=following)
 
-    def perform_create(self, serializer):
+    def perform_create(
+            self,
+            serializer: Serializer
+    ) -> None:
         serializer.save(author=self.request.user)
 
     @action(detail=True, methods=["POST", "GET"])
-    def add_like(self, request, pk):
+    def add_like(
+            self,
+            request: Request,
+            pk
+    ) -> Response:
         serializer_class = self.get_serializer_class()
         serializer = serializer_class(
             data={
@@ -53,7 +67,11 @@ class PostViewSet(viewsets.ModelViewSet):
         )
 
 
-def remove_like(self, request, pk):
+def remove_like(
+        self,
+        request: Request,
+        pk
+) -> Response:
     post = self.get_object()
     like = post.likes.filter(user=request.user).first()
 
@@ -69,5 +87,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly,)
 
-    def perform_create(self, serializer):
+    def perform_create(
+            self,
+            serializer: Serializer
+    ) -> None:
         serializer.save(author=self.request.user)
