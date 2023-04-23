@@ -23,6 +23,7 @@ class Post(models.Model):
     tags = models.ManyToManyField(
         Tag,
         blank=True,
+        null=True,
         related_name="posts"
     )
     author = models.ForeignKey(
@@ -33,7 +34,8 @@ class Post(models.Model):
     images = models.ManyToManyField(
         Image,
         related_name="posts",
-        blank=True
+        blank=True,
+        null=True
     )
 
     class Meta:

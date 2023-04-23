@@ -10,7 +10,6 @@ class CommentSerializer(serializers.ModelSerializer):
             "id",
             "content",
             "post",
-            "author",
             "created_at"
         )
 
@@ -46,8 +45,8 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    images = CreateImageSerializer(many=True)
-    tags = TagSerializer(many=True)
+    images = CreateImageSerializer(many=True, allow_empty=True, required=False)
+    tags = TagSerializer(many=True, allow_empty=True, required=False)
 
     class Meta:
         model = Post
@@ -56,7 +55,6 @@ class PostSerializer(serializers.ModelSerializer):
             "title",
             "content",
             "images",
-            "author",
             "tags",
             "created_at"
         )

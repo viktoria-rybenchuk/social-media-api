@@ -6,26 +6,32 @@ from content.models import Post, Comment
 from content.serializers import (
     PostSerializer,
     PostListSerializer,
-    CommentSerializer, CreateLikeSerializer
+    CommentSerializer, CreateLikeSerializer, PostDetailSerializer
 )
-from user.permissions import IsOwnerOrReadOnly
+from user.permissions import IsOwnerOrReadOnly, IsAuthorOrReadOnly
 
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_serializer_class(self):
+        if self.action == "retrieve":
+            return PostDetailSerializer
         if self.action == "list":
             return PostListSerializer
         if self.action == "add_like":
             return CreateLikeSerializer
         return self.serializer_class
 
-    def get_queryset(self):
-        following = self.request.user.followers.prefetch_related(
-            "followers__id").values_list("id")
-        return self.queryset.filter(author_id__in=following)
+    # def get_queryset(self):
+    #     following = self.request.user.following.prefetch_related(
+    #         "following__id").values_list("id")
+    #     return self.queryset.filter(author_id__in=following)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(detail=True, methods=["POST", "GET"])
     def add_like(self, request, pk):
@@ -61,4 +67,7 @@ def remove_like(self, request, pk):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)

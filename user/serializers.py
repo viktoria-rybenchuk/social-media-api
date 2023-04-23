@@ -84,6 +84,7 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "username",
+            "profile_image",
             "first_name",
             "last_name",
             "email"

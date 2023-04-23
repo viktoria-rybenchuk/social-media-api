@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -44,10 +44,16 @@ class LogoutAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly, )
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -65,7 +71,9 @@ class UserViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         if username:
-            queryset = queryset.filter(username__icontains=username)
+            queryset = queryset.filter(
+                username__icontains=username
+            )
 
         return queryset
 
@@ -94,31 +102,75 @@ class UserViewSet(viewsets.ModelViewSet):
     def upload_profile_image(self, request, pk=None):
         """Endpoint for uploading image to specific profile"""
         user = self.get_object()
-        serializer = self.get_serializer(user, data=request.data)
+        serializer = self.get_serializer(
+            user,
+            data=request.data
+        )
 
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    @action(detail=True, methods=["POST"], permission_classes=(IsAuthenticated,))
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=(IsAuthenticated,)
+    )
     def follow(self, request, pk=None):
         user_to_follow = self.get_object()
         username = user_to_follow.username
         user = request.user
-        if not Following.objects.filter(user=user, following_user=user_to_follow).exists():
-            Following.objects.create(user=user, following_user=user_to_follow)
-            Follower.objects.create(user=user_to_follow, following_user=user)
+        if user.id == user_to_follow.id:
+            return Response(
+                {"detail: You cannot follow yourself"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not Following.objects.filter(
+                user=user,
+                following_user=user_to_follow
+        ).exists():
+            Following.objects.create(
+                user=user,
+                following_user=user_to_follow
+            )
+            Follower.objects.create(
+                user=user_to_follow,
+                following_user=user
+            )
             return Response(status=status.HTTP_200_OK)
-        return Response(f"You have already follow {username}", status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            f"You have already follow {username}",
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    @action(detail=True, methods=["POST"], permission_classes=(IsAuthenticated,))
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=(IsAuthenticated,)
+    )
     def unfollow(self, request, pk=None):
         user_to_unfollow = self.get_object()
         user = request.user
-        Following.objects.filter(user=user, following_user=user_to_unfollow).delete()
-        Follower.objects.filter(user=user_to_unfollow, following_user=user).delete()
+        if user.id == user_to_unfollow.id:
+            return Response(
+                {"detail: You cannot follow yourself"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        Following.objects.filter(
+            user=user,
+            following_user=user_to_unfollow).delete()
+        Follower.objects.filter(
+            user=user_to_unfollow,
+            following_user=user
+        ).delete()
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["GET"])
