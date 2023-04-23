@@ -1,8 +1,25 @@
 from django.contrib.auth import get_user_model, authenticate
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from content.serializers import PostDetailSerializer
 from rest_framework import serializers, exceptions
 from django.utils.translation import gettext as _
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs["refresh"]
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+
+        except TokenError as ex:
+            raise exceptions.AuthenticationFailed(ex)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +39,8 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
 
         return user
+
+
 class AuthTokenSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"})
@@ -47,21 +66,26 @@ class AuthTokenSerializer(serializers.Serializer):
         data["user"] = user
         return data
 
+
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ("username", "first_name", "last_name")
 
+
 class UserDetailSerializer(serializers.ModelSerializer):
     posts = PostDetailSerializer(many=True)
+
     class Meta:
         model = get_user_model()
         fields = ("username", "profile_image", "first_name", "last_name", "posts")
+
 
 class ProfileImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ("id", "profile_image")
+
+
 class FollowersSerializer(serializers.Serializer):
     following_user = UserListSerializer(read_only=True)
-
