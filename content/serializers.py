@@ -3,6 +3,7 @@ from rest_framework import serializers
 from content.models import Comment, Like, Post, Image
 
 
+
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(read_only=True, slug_field="username")
 
@@ -43,9 +44,8 @@ class PostDetailSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(read_only=True, slug_field="username")
     comments = CreateCommentSerializer(many=True)
     likes = CreateLikeSerializer(many=True)
-    images = PostImageSerializer(many=True)
 
     class Meta:
         model = Post
-        fields = ("id", "title", "content", "images", "author", "created_at", "comments", "likes")
+        fields = ("id", "title", "content", "author", "created_at", "comments", "likes")
 

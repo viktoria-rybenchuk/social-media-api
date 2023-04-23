@@ -1,7 +1,9 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from config.settings import AUTH_USER_MODEL
+from content.models import Image
 
 
 class User(AbstractUser):
@@ -14,26 +16,46 @@ class User(AbstractUser):
             f"({self.first_name}"
             f" {self.last_name})"
         )
-
-
-class UserFollowing(models.Model):
-    following = models.ForeignKey(
-        AUTH_USER_MODEL,
-        related_name="following",
-        on_delete=models.CASCADE
-    )
-    followers = models.ForeignKey(
-        AUTH_USER_MODEL,
+class Follower(models.Model):
+    following_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         related_name="followers",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        default=""
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="following",
+        on_delete=models.CASCADE,
+        null=True,
+        default=""
     )
     created = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ("user", "following_user")
 
     def __str__(self) -> str:
-        return (
-            f"Followers: {self.followers.username}"
-            f"Following: {self.followers.username}"
-        )
+        return f"{self.following_user.username} follows {self.user.username}"
 
+class Following(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="following_users",
+        on_delete=models.CASCADE,
+        null=True,
+        default=""
+    )
+    following_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="followings",
+        on_delete=models.CASCADE,
+        null=True,
+        default=""
+    )
+    created = models.DateTimeField(auto_now_add=True)
     class Meta:
-        unique_together = ("following", "followers")
+        unique_together = ("user", "following_user")
+
+    def __str__(self) -> str:
+        return f"{self.user.username} follows {self.following_user.username}"
