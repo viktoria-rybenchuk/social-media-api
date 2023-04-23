@@ -22,6 +22,11 @@ class PostViewSet(viewsets.ModelViewSet):
             return CreateLikeSerializer
         return self.serializer_class
 
+    def get_queryset(self):
+        following = self.request.user.followers.prefetch_related(
+            "followers__id").values_list("id")
+        return self.queryset.filter(author_id__in=following)
+
     @action(detail=True, methods=["POST", "GET"])
     def add_like(self, request, pk):
         serializer_class = self.get_serializer_class()
@@ -33,8 +38,13 @@ class PostViewSet(viewsets.ModelViewSet):
         )
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.data, status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 def remove_like(self, request, pk):

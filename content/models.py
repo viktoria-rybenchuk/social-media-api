@@ -11,11 +11,20 @@ class Image(models.Model):
     )
 
 
+class Tag(models.Model):
+    title = models.CharField(max_length=60)
+
+
 class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.CharField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+        related_name="posts"
+    )
     author = models.ForeignKey(
         AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -73,8 +82,3 @@ class Like(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.username} liked {self.post.title}"
-
-
-class Tag(models.Model):
-    title = models.CharField(max_length=60)
-    posts = models.ManyToManyField(Post, related_name="tags")
