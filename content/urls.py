@@ -5,7 +5,7 @@ from content.views import PostViewSet, CommentViewSet
 
 router = routers.DefaultRouter()
 router.register("posts", PostViewSet)
-router.register("posts/(?P<post_id>\d+)/comments", CommentViewSet)
+router.register("posts/?<post_id>/comments", CommentViewSet)
 
 
 app_name = "content"

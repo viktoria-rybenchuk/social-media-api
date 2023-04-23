@@ -1,4 +1,7 @@
+from typing import Type
+
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, status, generics, mixins
@@ -6,9 +9,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from rest_framework.views import APIView
 
-from user.models import Following, Follower
+from user.models import Following, Follower, User
 from user.permissions import IsOwnerOrReadOnly
 from user.serializers import (
     UserListSerializer,
@@ -27,7 +31,7 @@ class CreateUserView(generics.CreateAPIView):
 class ManageUserView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
-    def get_object(self):
+    def get_object(self) -> User:
         return self.request.user
 
 
@@ -53,9 +57,9 @@ class UserViewSet(
 ):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsOwnerOrReadOnly, )
+    permission_classes = (IsOwnerOrReadOnly,)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Type[Serializer]:
         if self.action == "retrieve":
             return UserDetailSerializer
         if self.action == "list":
@@ -66,7 +70,7 @@ class UserViewSet(
             return FollowersSerializer
         return self.serializer_class
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         username = self.request.query_params.get("username")
         queryset = self.queryset
 
@@ -99,7 +103,11 @@ class UserViewSet(
         detail=True,
         url_path="upload-image",
     )
-    def upload_profile_image(self, request, pk=None):
+    def upload_profile_image(
+            self,
+            request: Request,
+            pk=None
+    ) -> Response:
         """Endpoint for uploading image to specific profile"""
         user = self.get_object()
         serializer = self.get_serializer(
@@ -124,7 +132,11 @@ class UserViewSet(
         methods=["POST"],
         permission_classes=(IsAuthenticated,)
     )
-    def follow(self, request, pk=None):
+    def follow(
+            self,
+            request: Request,
+            pk=None
+    ) -> Response:
         user_to_follow = self.get_object()
         username = user_to_follow.username
         user = request.user
@@ -156,7 +168,11 @@ class UserViewSet(
         methods=["POST"],
         permission_classes=(IsAuthenticated,)
     )
-    def unfollow(self, request, pk=None):
+    def unfollow(
+            self,
+            request: Request,
+            pk=None
+    ) -> Response:
         user_to_unfollow = self.get_object()
         user = request.user
         if user.id == user_to_unfollow.id:
@@ -174,14 +190,20 @@ class UserViewSet(
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["GET"])
-    def followers(self, request, pk):
+    def followers(self,
+                  request: Request,
+                  pk=None
+                  ) -> Response:
         user = self.get_object()
         followers = Follower.objects.filter(user_id=user.id)
         serializer = self.get_serializer(followers, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"])
-    def following(self, request, pk=None):
+    def following(self,
+                  request: Request,
+                  pk=None
+                  ) -> Response:
         user = self.get_object()
         following_users = Following.objects.filter(user_id=user.id)
         serializer = self.get_serializer(following_users, many=True)
