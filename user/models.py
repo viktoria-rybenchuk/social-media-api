@@ -1,12 +1,18 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext as _
 from django.db import models
-
-from config.settings import AUTH_USER_MODEL
-from content.models import Image
+from user.user_manager import UserManager
 
 
 class User(AbstractUser):
+    username = None
+    email = models.EmailField(_("email address"), unique=True)
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
     profile_image = models.ImageField(upload_to="profile_images", null=True, blank=True)
     biography = models.CharField(max_length=500, blank=True)
 
