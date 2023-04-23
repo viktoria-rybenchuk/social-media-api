@@ -22,6 +22,8 @@ class User(AbstractUser):
             f"({self.first_name}"
             f" {self.last_name})"
         )
+
+
 class Follower(models.Model):
     following_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -38,11 +40,13 @@ class Follower(models.Model):
         default=""
     )
     created = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         unique_together = ("user", "following_user")
 
     def __str__(self) -> str:
         return f"{self.following_user.username} follows {self.user.username}"
+
 
 class Following(models.Model):
     user = models.ForeignKey(
@@ -60,6 +64,7 @@ class Following(models.Model):
         default=""
     )
     created = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         unique_together = ("user", "following_user")
 

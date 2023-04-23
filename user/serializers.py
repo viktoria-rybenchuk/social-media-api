@@ -21,10 +21,19 @@ class LogoutSerializer(serializers.Serializer):
         except TokenError as ex:
             raise exceptions.AuthenticationFailed(ex)
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ("id", "email", "password", "is_staff")
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "is_staff"
+        )
         read_only_fields = ("is_staff",)
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
@@ -43,7 +52,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 class AuthTokenSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(style={"input_type": "password"})
+    password = serializers.CharField(style={
+        "input_type": "password"}
+    )
 
     def validate(self, data):
         email = data.get("email")
@@ -60,7 +71,7 @@ class AuthTokenSerializer(serializers.Serializer):
                 msg = _("Unable to log in with provided credentials.")
                 raise exceptions.ValidationError(msg)
         else:
-            msg = _('Must include "email" and "password".')
+            msg = _("Must include 'email' and 'password'.")
             raise exceptions.ValidationError(msg)
 
         data["user"] = user
@@ -70,15 +81,32 @@ class AuthTokenSerializer(serializers.Serializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ("username", "first_name", "last_name")
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email"
+        )
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
     posts = PostDetailSerializer(many=True)
+    followers = serializers.IntegerField(source="followers.count")
+    following = serializers.IntegerField(source="following.count")
 
     class Meta:
         model = get_user_model()
-        fields = ("username", "profile_image", "first_name", "last_name", "posts")
+        fields = (
+            "username",
+            "profile_image",
+            "first_name",
+            "last_name",
+            "followers",
+            "following",
+            "posts",
+
+        )
 
 
 class ProfileImageSerializer(serializers.ModelSerializer):
