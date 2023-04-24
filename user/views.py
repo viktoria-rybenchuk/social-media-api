@@ -1,6 +1,7 @@
 from typing import Type
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -132,6 +133,7 @@ class UserViewSet(
         methods=["POST"],
         permission_classes=(IsAuthenticated,)
     )
+    @transaction.atomic
     def follow(
             self,
             request: Request,
@@ -168,6 +170,7 @@ class UserViewSet(
         methods=["POST"],
         permission_classes=(IsAuthenticated,)
     )
+    @transaction.atomic
     def unfollow(
             self,
             request: Request,
