@@ -46,7 +46,7 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     images = CreateImageSerializer(many=True, allow_empty=True, required=False)
-    tags = TagSerializer(many=True, allow_empty=True, required=False)
+    tags = TagSerializer(many=False, allow_empty=True, required=False)
 
     class Meta:
         model = Post
@@ -61,14 +61,14 @@ class PostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         tag_data = validated_data.pop("tags", [])
-        images_data = validated_data.pop("images", [])
+        # images_data = validated_data.pop("images", [])
         post = Post.objects.create(**validated_data)
         for tag in tag_data:
             Tag.objects.create(**tag)
             post.tags.add(tag)
-        for image_data in images_data:
-            Image.objects.create(**image_data)
-            post.tags.add(image_data)
+        # for image_data in images_data:
+        #     Image.objects.create(**image_data)
+        #     post.tags.add(image_data)
 
         return post
 
